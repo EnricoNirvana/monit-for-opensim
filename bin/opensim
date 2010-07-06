@@ -1,0 +1,107 @@
+#!/bin/sh
+#
+# for usage, run without arguments
+#
+# see ../README for setup instructions.
+#
+
+show_help() {
+    echo "usage: ./opensim {start|stop|restart|console} <sim_name>"
+    echo "    where <sim_name> is one of: your_sim"
+}
+
+check_user() {
+    if [ $USER != 'opensim' ]; then
+        echo "This must be run as user opensim"
+        exit 1
+    fi
+}
+
+setup() {
+    if [ ! $1 ]; then
+        show_help
+        exit 1
+    else
+        SIM=$1
+    fi
+
+    if [ $SIM == "your_sim" ]; then
+        MONO="/usr/bin/mono"
+        PID="/var/run/opensim/${SIM}.pid"
+        OPENSIM_DIR="/usr/lib/opensim"
+        CONSOLE_PORT="9100"
+        CONSOLE_USER="console_user"
+        CONSOLE_PASS="console_pass"
+    else
+        echo "Sorry, I've never heard of sim ${SIM}.  Exiting."
+        exit 1;
+    fi
+}
+
+do_start() {
+    if [ ! $1 ]; then
+        show_help
+        exit 1
+    else
+        SIM=$1
+    fi
+
+    setup $SIM
+    check_user
+
+    cd ${OPENSIM_DIR}/bin && $MONO --debug OpenSim.exe -console=rest -name=$SIM 2>&1 &
+}
+
+do_kill() {
+    if [ ! $1 ]; then
+        show_help
+        exit 1
+    else
+        SIM=$1
+    fi
+
+    setup $SIM
+    check_user
+
+    if [ -f $PID ]; then
+        kill -9 `cat $PID`
+    else
+        echo "Sorry, ${SIM} PID not found."
+        exit 1
+    fi
+}
+
+do_console() {
+    if [ ! $1 ]; then
+        show_help
+        exit 1
+    fi
+
+    setup $1
+
+    cd ${OPENSIM_DIR}/bin && $MONO OpenSim.ConsoleClient.exe -host localhost \
+            -port $CONSOLE_PORT -user $CONSOLE_USER -pass $CONSOLE_PASS -prompt "$SIM "
+}
+
+case "$1" in
+    start)
+        do_start $2
+        ;;
+    stop)
+        do_kill $2
+        ;;
+    kill)
+        do_kill $2
+        ;;
+    restart)
+        do_kill $2
+        do_start $2
+        ;;
+    console)
+        do_console $2
+        ;;
+    *)
+        show_help
+        exit 1
+        ;;
+esac
