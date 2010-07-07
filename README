@@ -1,0 +1,86 @@
+Using Monit to stop/start/restart OpenSimulator
+===============================================
+
+Here are some basics to get you started using Monit
+[ http://mmonit.com/monit/ ]  to start/stop/restart your OpenSim
+process(es).  This example will check your sim every 30 seconds, and
+restart it if it's dead, or if SimFPS drops to 0 for 2 minutes, or CPU
+usage exceeds 300% (e.g. 3 cores on a quad-core machine... an
+occasional problem when running OpenSim via mono).
+
+I use these with OpenSim's REST console.  To enable that, in the
+[Network] section of your OpenSim.ini , add:
+
+    console_port = 9100
+    ConsoleUser = "console_username"
+    ConsolePass = "console_password"
+
+setting them to whatever you desire.  The nice thing about this is by
+having the console bind to its own TCP port you can easily firewall it
+off (though I wish you could just bind it to localhost).  One quirk:
+right now OpenSim's REST console client expects
+bin/OpenSim.ConsoleClient.ini to exist, even if you use command line
+options exclusively.  So just create an empty file with that name.
+
+Next, in the [Startup] section of your OpenSim.ini , add the following
+to enable the JSON sim stats:
+
+    Stats_URI = "jsonSimStats"
+
+setting it to whatever you desire.  The above would make some basic
+simulator stats available via http://<yoursimhost>:<port>/jsonSimStats
+where <port> is whatever you've set http_listener_port to in
+OpenSim.ini .
+
+Also in the [Startup] section, enable the writing of a PID file:
+
+    PIDFile = "/var/run/opensim/opensim.pid"
+
+setting it to whatever you desire.
+
+Next, install Monit if you haven't already.  With Ubuntu/Debian this
+is as simple as:
+
+    # apt-get install monit
+
+Next, copy the monit/opensim.conf included here into wherever your
+Monit config files live.  That might be /etc/monit/conf.d , maybe
+/etc/monit.d , or something similar.  In that file make any necessary
+changes, e.g. to the PID file location, the uid OpenSim runs as, the
+gid OpenSim runs as, the start/stop mechanism you use to start/stop
+OpenSim, and the URL to view JSON sim stats for your sim.
+
+If you want, there's also an included script for
+starting/stopping/restarting OpenSim and connecting the REST console
+client.  It's bin/opensim .  Copy it to /usr/local/bin or wherever you
+keep such things.
+
+If you use the enclosed bin/opensim , change the following vars to
+whatever's appropriate for your system:
+
+    MONO="/usr/bin/mono"
+    PID="/var/run/opensim/${SIM}.pid"
+    OPENSIM_DIR="/usr/lib/opensim"
+    CONSOLE_PORT="9100"
+    CONSOLE_USER="console_username"
+    CONSOLE_PASS="console_password"
+
+See /etc/monit/monitrc on your system and change so suit your needs.
+It'll probably work out of the box without modification, but at a
+minimum you might want to change:
+
+    set alert you@yourdomain.com
+    set mail-format { from: monit@yourdomain.com }
+
+so email alerts will be sent with the correct from:/to: headers.
+Assuming you want to get the email notifications when Monit restarts
+OpenSim.
+
+Finally, fire up monit.
+
+    # /etc/init.d/monit start
+
+Clear as mud?  Let me know if you think any part needs clarification.
+
+-coyled
+http://coyled.com
