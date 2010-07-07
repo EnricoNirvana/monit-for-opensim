@@ -28,8 +28,8 @@ to enable the JSON sim stats:
     Stats_URI = "jsonSimStats"
 
 setting it to whatever you desire.  The above would make some basic
-simulator stats available via http://<yoursimhost>:<port>/jsonSimStats
-where <port> is whatever you've set http_listener_port to in
+simulator stats available via http://yoursim.example.com:port/jsonSimStats
+where "port" is whatever you've set http_listener_port to in
 OpenSim.ini .
 
 Also in the [Startup] section, enable the writing of a PID file:
