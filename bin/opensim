@@ -49,7 +49,7 @@ do_start() {
     setup $SIM
     check_user
 
-    cd ${OPENSIM_DIR}/bin && $MONO --debug OpenSim.exe -console=rest -name=$SIM 2>&1 &
+    cd ${OPENSIM_DIR}/bin && $MONO --debug OpenSim.exe -console=rest -name=$SIM > /dev/null 2>&1 &
 }
 
 do_kill() {
